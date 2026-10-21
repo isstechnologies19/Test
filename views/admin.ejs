@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Auctioneer Panel — <%= config.title %></title>
+<%- include('partials/head') %>
+<style>
+.main{display:grid;grid-template-columns:1fr 390px;gap:16px;padding:18px 20px;max-width:1500px;margin:0 auto}
+@media(max-width:1100px){.main{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.live-pill{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);letter-spacing:2px}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1s infinite}
+.cp-row{display:flex;gap:14px;align-items:center}
+.cp-av{width:64px;height:64px;border-radius:14px;display:grid;place-items:center;font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;flex-shrink:0;background:linear-gradient(135deg,var(--pc,var(--accent)),#000)}
+.cp-name{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;line-height:1.05;margin-bottom:6px}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.bid-info{display:flex;gap:30px;margin-top:16px;align-items:flex-end;flex-wrap:wrap}
+.bi-val{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:var(--money);line-height:1}
+#adminTimer{font-family:'Rajdhani',sans-serif;font-size:52px;font-weight:700;line-height:1}
+#adminTimer.urgent{color:var(--red);animation:pulse .4s infinite}
+.leader{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700}
+.sub-lbl{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-top:4px}
+.sets-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+@media(max-width:600px){.sets-grid{grid-template-columns:1fr}}
+.set-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s}
+.set-card:hover{border-color:var(--accent)}
+.set-card.active{border-color:var(--green);background:rgba(16,185,129,.07)}
+.set-card.done{opacity:.45}
+.set-name{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:1px}
+.set-stats{font-size:11px;color:var(--dim);margin-top:2px}
+.set-progress{height:3px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:8px;overflow:hidden}
+.set-progress div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.active-set{display:none;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.25);border-radius:10px;padding:10px 14px}
+.active-set.show{display:flex}
+.ctrl{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.b-next{background:#2563eb;border:none}
+.b-start{background:var(--green);border:none;color:#04130d}
+.b-pause{background:#f97316;border:none}
+.b-unsold{background:#52525b;border:none}
+.b-restart{background:#7c3aed;border:none}
+.b-requeue{background:rgba(34,211,238,.14);color:var(--accent2);border-color:rgba(34,211,238,.35)}
+.corr-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.corr-grid{grid-template-columns:1fr}}
+.corr{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:14px}
+.corr h4{font-size:11px;letter-spacing:2px;color:var(--accent2);text-transform:uppercase;margin-bottom:10px}
+.form-row{display:flex;gap:8px;margin-bottom:8px}
+.form-row > *{flex:1;min-width:0}
+.form-row > .btn{flex:0 0 auto}
+.nom{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:13px}
+.nom-top{display:flex;justify-content:space-between;margin-bottom:4px}
+.st{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+.st-pending{color:#fb923c} .st-approved{color:var(--green)} .st-rejected{color:var(--red)}
+.log{max-height:240px;overflow-y:auto}
+.log-item{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;align-items:center}
+.queue-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.qtab{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid var(--border);color:var(--dim)}
+.qtab.active{color:var(--accent);border-color:var(--accent);background:rgba(255,45,138,.08)}
+.queue{max-height:560px;overflow-y:auto}
+.ptbl{width:100%;border-collapse:collapse}
+.ptbl th{position:sticky;top:0;background:var(--panel);font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;text-align:left;padding:6px;border-bottom:1px solid var(--border)}
+.ptbl td{padding:7px 6px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03)}
+.ptbl tr.cur td{background:rgba(255,45,138,.09)}
+.ptbl tr.sold td{opacity:.45}
+.ptbl tr.uns td{opacity:.35}
+.pbadge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;letter-spacing:1px}
+.b-cur{background:rgba(255,45,138,.15);color:var(--accent)}
+.b-sold{background:rgba(16,185,129,.15);color:var(--green)}
+.b-uns{background:rgba(152,152,174,.15);color:var(--dim)}
+.purse-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px}
+.purse-row:last-child{border-bottom:none}
+.pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pname{width:130px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pbar{flex:1;height:4px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden}
+.pbar div{height:100%;border-radius:4px;transition:width .5s}
+.ppl{width:48px;text-align:right;color:var(--dim);font-size:11px}
+.ppu{width:76px;text-align:right;color:var(--money);font-family:'Rajdhani',sans-serif;font-weight:700}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-main">
+    <div class="brand">
+      <a href="/" class="logo"><span class="logo-mark">W</span><span>AUCTIONEER</span></a>
+      <div class="live-pill"><div class="ldot"></div>LIVE</div>
+    </div>
+    <a class="btn-ghost" href="/admin/logout">Logout</a>
+  </div>
+</header>
+
+<main class="main">
+  <div class="col">
+
+    <!-- CURRENT PLAYER -->
+    <section class="panel">
+      <div class="label">Currently on the block</div>
+      <div class="cp-row">
+        <div class="cp-av" id="cpAv">🏏</div>
+        <div style="min-width:0"><div class="cp-name" id="cpName">No player selected</div><div class="tags" id="cpTags"></div></div>
+      </div>
+      <div class="bid-info">
+        <div><div class="bi-val" id="cpBid">—</div><div class="sub-lbl">Current bid</div></div>
+        <div><div id="adminTimer">--</div><div class="sub-lbl">Seconds</div></div>
+        <div><div class="leader" id="cpLeader" style="color:var(--dim)">No bids</div><div class="sub-lbl">Leader</div></div>
+      </div>
+    </section>
+
+    <!-- SETS & CONTROLS -->
+    <section class="panel">
+      <div class="label">Auction sets — click one to start it</div>
+      <div class="sets-grid">
+        <% setsInfo.forEach(function(s){ %>
+        <div class="set-card <%= s.remaining === 0 ? 'done' : '' %> <%= s.name === currentSet ? 'active' : '' %>" data-set="<%= s.name %>">
+          <div class="set-name"><%= s.name %></div>
+          <div class="set-stats"><%= s.sold %> sold · <%= s.unsold %> unsold · <b style="color:var(--text)"><%= s.remaining %> left</b></div>
+          <div class="set-progress"><div style="width:<%= s.total ? Math.round((s.sold + s.unsold) / s.total * 100) : 0 %>%"></div></div>
+        </div>
+        <% }) %>
+      </div>
+      <div class="active-set <%= currentSet ? 'show' : '' %>">
+        <div><div class="sub-lbl" style="margin:0 0 2px">Active set</div><div class="set-name" style="color:var(--green)"><%= currentSet || '—' %></div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm b-requeue" id="btnRequeue">♻ Requeue unsold</button>
+          <button class="btn btn-sm" id="btnShuffle">⇄ Reshuffle</button>
+        </div>
+      </div>
+      <div class="ctrl">
+        <button class="btn b-next" id="btnNext">⏭ NEXT</button>
+        <button class="btn b-start" id="btnStart">▶ START (<%= config.timer %>s)</button>
+        <button class="btn b-pause" id="btnPause">⏸ PAUSE</button>
+        <button class="btn b-unsold" id="btnUnsold">✕ UNSOLD</button>
+        <button class="btn b-restart" id="btnRestart">🔄 RESTART BID</button>
+        <button class="btn btn-danger" id="btnReset">⚠ RESET ALL</button>
+      </div>
+    </section>
+
+    <!-- MANUAL CORRECTIONS -->
+    <section class="panel">
+      <div class="label">⚙ Manual corrections & trading</div>
+      <div class="corr-grid">
+        <div class="corr">
+          <h4>💰 Set team purse</h4>
+          <div class="form-row"><select class="input" id="purseTeam"><% Object.keys(publicTeams).forEach(function(id){ %><option value="<%= id %>"><%= publicTeams[id].name %></option><% }) %></select></div>
+          <div class="form-row"><input class="input" type="number" step="0.01" id="purseCr" placeholder="Purse in Crores (e.g. 42.5)"><button class="btn btn-sm" id="btnPurse">SET</button></div>
+        </div>
+
+        <div class="corr">
+          <h4>❌ Remove player (refunds purse)</h4>
+          <div class="form-row"><select class="input" id="remTeam"><% Object.keys(publicTeams).forEach(function(id){ %><option value="<%= id %>"><%= publicTeams[id].name %></option><% }) %></select></div>
+          <div class="form-row"><select class="input" id="remPlayer"><option value="">Loading…</option></select><button class="btn btn-sm" id="btnRemove">REMOVE</button></div>
+        </div>
+
+        <div class="corr">
+          <h4>✅ Add player to team</h4>
+          <div class="form-row"><select class="input" id="addTeam"><% Object.keys(publicTeams).forEach(function(id){ %><option value="<%= id %>"><%= publicTeams[id].name %></option><% }) %></select></div>
+          <div class="form-row"><input class="input" id="addName" list="poolList" placeholder="Player name (pick from list)"></div>
+          <datalist id="poolList"><% poolList.forEach(function(p){ %><option value="<%= p.name %>"><% }) %></datalist>
+          <div class="form-row">
+            <select class="input" id="addRole"><option>Batter</option><option>Wicket-Keeper</option><option>All-Rounder</option><option>Bowler</option></select>
+            <select class="input" id="addClub"><% Object.keys(clubs).forEach(function(c){ %><option value="<%= c %>"><%= c %></option><% }) %></select>
+          </div>
+          <div class="form-row"><input class="input" id="addCountry" placeholder="Country" value="Australia"><input class="input" type="number" step="0.1" id="addLakhs" placeholder="Paid (Lakhs)"><button class="btn btn-sm" id="btnAdd">ADD</button></div>
+        </div>
+
+        <div class="corr">
+          <h4>🔄 Trade between teams</h4>
+          <div class="form-row"><select class="input" id="trFrom"><% Object.keys(publicTeams).forEach(function(id){ %><option value="<%= id %>">FROM: <%= publicTeams[id].name %></option><% }) %></select></div>
+          <div class="form-row"><select class="input" id="trPlayer"><option value="">Loading…</option></select></div>
+          <div class="form-row"><select class="input" id="trTo"><% Object.keys(publicTeams).forEach(function(id){ %><option value="<%= id %>">TO: <%= publicTeams[id].name %></option><% }) %></select></div>
+          <div class="form-row"><input class="input" type="number" step="0.1" id="trLakhs" placeholder="Trade amount (Lakhs)"><button class="btn btn-sm" id="btnTrade">TRADE</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRADE NOMINATIONS -->
+    <section class="panel">
+      <div class="label">🔄 Trade nominations (<span id="tradeCount">0</span> pending)</div>
+      <div id="tradeList" style="display:flex;flex-direction:column;gap:8px"><div class="empty">Loading…</div></div>
+    </section>
+
+    <!-- SHEET WRITE-BACK -->
+    <section class="panel">
+      <div class="label">Google Sheets write-back (optional)</div>
+      <div class="form-row"><input class="input" id="scriptUrl" value="<%= appsScriptUrl %>" placeholder="Google Apps Script Web App URL"><button class="btn btn-sm" id="btnScript">SAVE</button></div>
+      <p class="dim small">Sends every sale to your Apps Script. For hosting, set it as the APPS_SCRIPT_URL environment variable so it survives restarts.</p>
+    </section>
+
+    <!-- SALES LOG -->
+    <section class="panel">
+      <div class="label">Sales log (<span id="logCount"><%= soldHistory.length %></span> sold)</div>
+      <div class="log" id="logWrap">
+        <% if (!soldHistory.length) { %><div class="empty">No sales yet</div><% } %>
+        <% soldHistory.slice().reverse().forEach(function(h){ %>
+        <div class="log-item"><span class="money"><%= h.amountStr %></span><span><b><%= h.player %></b> (<%= h.role %>) → <%= h.teamName %></span></div>
+        <% }) %>
+      </div>
+    </section>
+  </div>
+
+  <div class="col">
+    <!-- PLAYER QUEUE -->
+    <section class="panel">
+      <div class="label">Player queue</div>
+      <div class="queue-tabs">
+        <% Object.keys(sets).forEach(function(name){ %>
+        <a class="qtab <%= name === viewSet ? 'active' : '' %>" href="/admin?set=<%= encodeURIComponent(name) %>"><%= name %></a>
+        <% }) %>
+      </div>
+      <div class="queue">
+        <table class="ptbl">
+          <thead><tr><th>#</th><th>Player</th><th>Nat</th><th>Base</th><th>Status</th></tr></thead>
+          <tbody id="queueBody">
+            <% (sets[viewSet] || []).forEach(function(p, i){ var isCur = viewSet === currentSet && i === currentPlayerIndex; %>
+            <tr class="<%= isCur ? 'cur' : (p.sold ? 'sold' : (p.unsold ? 'uns' : '')) %>" data-name="<%= p.name %>" data-set="<%= viewSet %>">
+              <td class="dim"><%= i + 1 %></td>
+              <td><b><%= p.name %></b> <span class="club-badge" style="--cc:<%= clubs[p.club] ? clubs[p.club].color : '#a78bfa' %>"><%= p.club %></span></td>
+              <td style="font-size:10px;color:<%= p.nationality === 'Overseas' ? '#fb923c' : '#34d399' %>"><%= p.nationality === 'Overseas' ? 'OS' : 'AUS' %></td>
+              <td class="money" style="font-size:12px"><%= fmt(p.base) %></td>
+              <td><% if (isCur) { %><span class="pbadge b-cur">NOW</span><% } else if (p.sold) { %><span class="pbadge b-sold"><%= publicTeams[p.soldTo] ? publicTeams[p.soldTo].short : 'SOLD' %></span><% } else if (p.unsold) { %><span class="pbadge b-uns">UNSOLD</span><% } else { %><span class="dim small">Queue</span><% } %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PURSES -->
+    <section class="panel">
+      <div class="label">Franchise purses</div>
+      <% Object.keys(publicTeams).forEach(function(id){ var t = teamState[id]; %>
+      <div class="purse-row">
+        <span class="pdot" style="background:<%= publicTeams[id].color %>"></span>
+        <span class="pname" style="color:<%= publicTeams[id].color %>"><%= publicTeams[id].name %></span>
+        <div class="pbar"><div id="bar-<%= id %>" style="width:<%= Math.max(0, Math.round(t.purse / config.purse * 100)) %>%;background:<%= publicTeams[id].color %>"></div></div>
+        <span class="ppl" id="pl-<%= id %>"><%= t.players.length %>/<%= config.maxPlayers %></span>
+        <span class="ppu" id="pu-<%= id %>"><%= fmt(t.purse) %></span>
+      </div>
+      <% }) %>
+    </section>
+  </div>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+var socket = io()
+var activeSet = <%- JSON.stringify(currentSet || "") %>
+var POOL = <%- JSON.stringify(poolList) %>
+
+function initials(n){ return n.split(/\s+/).filter(Boolean).map(function(w){ return w[0] }).slice(0, 2).join("").toUpperCase() }
+
+async function post(url, data){
+  try {
+    var r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data || {}) })
+    if (r.status === 403) { location.href = "/admin"; return {} }
+    return await r.json()
+  } catch (e) { return { error: "Network error" } }
+}
+function done(r, msg, reload){
+  if (r && (r.success || r.done)) {
+    showToast(msg || "Done", "ok")
+    if (reload) setTimeout(function(){ location.reload() }, 700)
+    return true
+  }
+  showToast((r && r.error) || "Something went wrong", "err")
+  return false
+}
+
+// ── Sets & controls ──
+document.querySelectorAll(".set-card").forEach(function(card){
+  card.addEventListener("click", async function(){
+    var name = card.dataset.set
+    var r = await post("/admin/start-set", { setName: name })
+    if (r.success) location.href = "/admin?set=" + encodeURIComponent(name)
+    else showToast(r.error || "Error", "err")
+  })
+})
+$("btnNext").onclick = async function(){
+  if (!activeSet) return showToast("Click a set first", "err")
+  var r = await post("/admin/next-player", { setName: activeSet })
+  if (r.done) showToast("✅ " + r.setName + " set complete!", "ok")
+  else done(r, r.player ? "⏭ " + r.player + " (" + r.role + ")" : "")
+}
+$("btnStart").onclick = async function(){ done(await post("/admin/start-timer"), "▶ Timer started") }
+$("btnPause").onclick = async function(){ done(await post("/admin/pause"), "⏸ Paused") }
+$("btnUnsold").onclick = async function(){ if (!confirm("Mark the current player UNSOLD?")) return; done(await post("/admin/mark-unsold"), "✕ Marked unsold") }
+$("btnRestart").onclick = async function(){ if (!confirm("Restart bidding at base price?")) return; done(await post("/admin/restart-bid"), "🔄 Bid restarted") }
+$("btnReset").onclick = async function(){
+  if (prompt("This wipes ALL squads, purses and sales.\nType RESET to confirm:") !== "RESET") return
+  done(await post("/admin/reset-auction"), "Auction reset", true)
+}
+$("btnShuffle").onclick = async function(){
+  if (!confirm("Reshuffle the remaining players in " + activeSet + "?")) return
+  done(await post("/admin/reshuffle-set", { setName: activeSet }), "⇄ Reshuffled", true)
+}
+$("btnRequeue").onclick = async function(){
+  var r = await post("/admin/requeue-unsold", { setName: activeSet })
+  done(r, "♻ " + (r.count || 0) + " unsold players back in the queue", true)
+}
+$("btnScript").onclick = async function(){ done(await post("/admin/set-apps-script", { url: $("scriptUrl").value.trim() }), "✅ Apps Script URL saved") }
+
+// ── Corrections ──
+var _state = null
+async function getState(force){
+  if (!_state || force) _state = await fetch("/api/team-state").then(function(r){ return r.json() }).catch(function(){ return {} })
+  return _state
+}
+function playerOptions(list, placeholder){
+  if (!list.length) return '<option value="">— No players —</option>'
+  return (placeholder ? '<option value="">' + placeholder + '</option>' : "") + list.map(function(p){
+    return '<option value="' + esc(p.name) + '">' + esc(p.name) + " (" + esc(p.role) + ") — " + fmt(p.soldFor) + '</option>'
+  }).join("")
+}
+async function fillRemove(){ var s = await getState(); var t = s[$("remTeam").value]; $("remPlayer").innerHTML = playerOptions(t ? t.players : []) }
+async function fillTrade(){ var s = await getState(); var t = s[$("trFrom").value]; $("trPlayer").innerHTML = playerOptions(t ? t.players : [], "— Select player —") }
+$("remTeam").onchange = fillRemove
+$("trFrom").onchange = fillTrade
+fillRemove(); fillTrade()
+
+$("addName").addEventListener("change", function(){
+  var n = this.value.trim().toLowerCase()
+  var p = POOL.find(function(x){ return x.name.toLowerCase() === n })
+  if (p) { $("addRole").value = p.role; $("addClub").value = p.club; $("addCountry").value = p.country }
+})
+
+$("btnPurse").onclick = async function(){
+  var cr = parseFloat($("purseCr").value)
+  if (isNaN(cr)) return showToast("Enter the purse in Crores", "err")
+  done(await post("/admin/manual-correction", { action: "set-purse", teamId: $("purseTeam").value, purse: Math.round(cr * 1e7) }), "✅ Purse updated", true)
+}
+$("btnRemove").onclick = async function(){
+  var name = $("remPlayer").value
+  if (!name) return showToast("Select a player", "err")
+  if (!confirm("Remove " + name + "? Their price is refunded and they return to the queue.")) return
+  done(await post("/admin/manual-correction", { action: "remove-player", teamId: $("remTeam").value, playerName: name }), "✅ Removed & refunded", true)
+}
+$("btnAdd").onclick = async function(){
+  var name = $("addName").value.trim()
+  if (!name) return showToast("Enter a player name", "err")
+  var lakhs = parseFloat($("addLakhs").value) || 0
+  done(await post("/admin/manual-correction", {
+    action: "add-player", teamId: $("addTeam").value, playerName: name, playerRole: $("addRole").value,
+    playerClub: $("addClub").value, playerCountry: $("addCountry").value, playerAmt: Math.round(lakhs * 1e5)
+  }), "✅ Player added", true)
+}
+$("btnTrade").onclick = async function(){
+  var name = $("trPlayer").value, from = $("trFrom").value, to = $("trTo").value
+  if (!name) return showToast("Select a player", "err")
+  if (from === to) return showToast("From and To must be different", "err")
+  var lakhs = parseFloat($("trLakhs").value) || 0
+  if (!confirm("Trade " + name + " to " + TEAMS[to].name + " for " + fmt(lakhs * 1e5) + "?")) return
+  done(await post("/admin/trade-player", { fromTeam: from, toTeam: to, playerName: name, tradeAmt: Math.round(lakhs * 1e5) }), "✅ Trade done", true)
+}
+
+// ── Trade nominations ──
+function nomCard(n){
+  var pending = n.status === "pending"
+  var opts = Object.keys(TEAMS).filter(function(id){ return id !== n.teamId }).map(function(id){
+    return '<option value="' + id + '">' + esc(TEAMS[id].name) + '</option>'
+  }).join("")
+  return '<div class="nom" data-team="' + esc(n.teamId) + '" data-player="' + esc(n.playerName) + '">' +
+    '<div class="nom-top"><b>' + esc(n.teamName) + '</b><span class="st st-' + n.status + '">' + n.status + '</span></div>' +
+    '<div>Offering <b>' + esc(n.playerName) + '</b> (' + esc(n.playerRole) + ') · paid ' + fmt(n.pricePaid) + '</div>' +
+    '<div class="dim small">Asking: ' + esc(n.askingPrice || "Open") + ' · Wants: ' + esc(n.wantedPlayer || "Any") + '</div>' +
+    (n.notes ? '<div class="dim small">Notes: ' + esc(n.notes) + '</div>' : "") +
+    (n.status === "approved" && n.tradedTo ? '<div class="dim small">Traded to ' + esc(n.tradedTo) + ' for ' + fmt(n.tradeAmount) + '</div>' : "") +
+    (n.status === "rejected" ? '<div class="dim small">Reason: ' + esc(n.reason) + '</div>' : "") +
+    (pending ? '<div class="form-row" style="margin-top:10px"><select class="input nomTo">' + opts + '</select><input class="input nomAmt" type="number" step="0.1" placeholder="Amount (Lakhs)"></div>' +
+      '<div class="form-row"><button class="btn btn-sm b-requeue act-exec">✓ EXECUTE TRADE</button><button class="btn btn-sm btn-danger act-rej">✕ REJECT</button></div>' : "") +
+    '</div>'
+}
+async function loadTrades(){
+  var d = await fetch("/admin/trade-nominations").then(function(r){ return r.json() }).catch(function(){ return {} })
+  var list = Object.values(d.nominations || {}).sort(function(a, b){ return (a.status === "pending" ? 0 : 1) - (b.status === "pending" ? 0 : 1) })
+  $("tradeCount").textContent = list.filter(function(n){ return n.status === "pending" }).length
+  $("tradeList").innerHTML = list.length ? list.map(nomCard).join("") : '<div class="empty">No nominations yet</div>'
+}
+$("tradeList").addEventListener("click", async function(e){
+  var card = e.target.closest(".nom"); if (!card) return
+  if (e.target.classList.contains("act-exec")) {
+    var to = card.querySelector(".nomTo").value
+    var lakhs = parseFloat(card.querySelector(".nomAmt").value) || 0
+    if (!confirm("Trade " + card.dataset.player + " to " + TEAMS[to].name + " for " + fmt(lakhs * 1e5) + "?")) return
+    var r = await post("/admin/trade-player", { fromTeam: card.dataset.team, toTeam: to, playerName: card.dataset.player, tradeAmt: Math.round(lakhs * 1e5) })
+    if (done(r, "✅ Trade done")) { _state = null; fillRemove(); fillTrade() }
+  }
+  if (e.target.classList.contains("act-rej")) {
+    var reason = prompt("Reason for rejection (optional):")
+    if (reason === null) return
+    done(await post("/admin/trade-decision", { teamId: card.dataset.team, decision: "reject", reason: reason }), "Trade rejected")
+  }
+})
+loadTrades()
+socket.on("tradesUpdate", loadTrades)
+
+// ── Live updates ──
+function highlightQueue(d){
+  var live = ["waiting", "running", "paused"].indexOf(d.status) !== -1
+  document.querySelectorAll("#queueBody tr").forEach(function(tr){
+    var isCur = live && d.player && tr.dataset.name === d.player.name && tr.dataset.set === d.setName
+    if (isCur && !tr.classList.contains("cur")) {
+      tr.classList.add("cur")
+      tr.lastElementChild.innerHTML = '<span class="pbadge b-cur">NOW</span>'
+      tr.scrollIntoView({ block: "nearest" })
+    } else if (!isCur && tr.classList.contains("cur")) {
+      tr.classList.remove("cur")
+      if (tr.lastElementChild.textContent === "NOW") tr.lastElementChild.innerHTML = '<span class="dim small">Queue</span>'
+    }
+  })
+}
+
+socket.on("timerUpdate", function(t){
+  var el = $("adminTimer")
+  el.textContent = t > 0 ? t : "--"
+  el.className = (t > 0 && t <= 3) ? "urgent" : ""
+})
+
+socket.on("auctionUpdate", function(d){
+  if (d.player) {
+    var c = CLUBS[d.player.club]
+    $("cpAv").textContent = initials(d.player.name)
+    $("cpAv").style.setProperty("--pc", c ? c.color : "var(--accent)")
+    $("cpName").textContent = d.player.name
+    $("cpTags").innerHTML = clubBadge(d.player.club, true) + roleTag(d.player.role) + natTag(d.player) +
+      '<span class="tag tag-money">Base ' + fmt(d.player.base) + '</span><span class="tag">' + esc(d.setName || "") + '</span>'
+  }
+  highlightQueue(d)
+  $("cpBid").textContent = d.bid ? fmt(d.bid) : "—"
+  var l = $("cpLeader")
+  l.textContent = d.bidTeamName || "No bids"
+  l.style.color = d.bidTeam && TEAMS[d.bidTeam] ? TEAMS[d.bidTeam].color : "var(--dim)"
+})
+
+socket.on("auctionResult", function(r){
+  document.querySelectorAll("#queueBody tr").forEach(function(tr){
+    if (tr.dataset.name !== r.player) return
+    tr.classList.remove("cur")
+    if (r.status === "sold") { tr.classList.add("sold"); tr.lastElementChild.innerHTML = '<span class="pbadge b-sold">' + esc(TEAMS[r.team] ? TEAMS[r.team].short : "SOLD") + '</span>' }
+    else { tr.classList.add("uns"); tr.lastElementChild.innerHTML = '<span class="pbadge b-uns">UNSOLD</span>' }
+  })
+  showToast(r.status === "sold" ? "🔨 " + r.player + " → " + r.teamName + " for " + r.bidStr : "✕ " + r.player + " unsold", r.status === "sold" ? "ok" : "info")
+})
+
+socket.on("teamUpdate", function(state){
+  _state = null
+  Object.keys(state).forEach(function(id){
+    var t = state[id]
+    if ($("bar-" + id)) $("bar-" + id).style.width = Math.max(0, Math.round(t.purse / CFG.purse * 100)) + "%"
+    if ($("pl-" + id)) $("pl-" + id).textContent = t.players.length + "/" + CFG.maxPlayers
+    if ($("pu-" + id)) $("pu-" + id).textContent = fmt(t.purse)
+  })
+})
+
+socket.on("historyUpdate", function(h){
+  if (!h.length) return
+  $("logCount").textContent = h.length
+  $("logWrap").innerHTML = h.map(function(x){
+    return '<div class="log-item"><span class="money">' + esc(x.amountStr) + '</span><span><b>' + esc(x.player) + '</b> (' + esc(x.role) + ') → ' + esc(x.teamName) + '</span></div>'
+  }).join("")
+})
+</script>
+</body>
+</html>

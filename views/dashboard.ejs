@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Live Auction — <%= team.name %></title>
+<%- include('partials/head') %>
+<style>
+.layout{display:grid;grid-template-columns:1fr 330px;gap:14px;max-width:1400px;margin:0 auto;padding:14px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.player-card{position:relative;overflow:hidden;border-left:4px solid var(--pc)}
+.player-card::after{content:"";position:absolute;right:-70px;top:-70px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--pc) 28%,transparent),transparent 70%);pointer-events:none}
+.player-main{display:flex;gap:16px;align-items:center}
+.avatar{width:76px;height:76px;border-radius:18px;display:grid;place-items:center;font-family:'Rajdhani',sans-serif;font-size:30px;font-weight:700;color:#fff;flex-shrink:0;background:linear-gradient(135deg,var(--pc),color-mix(in srgb,var(--pc) 25%,#000))}
+.pname-big{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;line-height:1.05;margin-bottom:8px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bid-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.stat-box{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.big-money{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:var(--money);line-height:1}
+.lead{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;line-height:1.1}
+.lead.none{font-family:'Inter',sans-serif;font-size:13px;font-weight:400;color:var(--dim)}
+.lead.mine{color:var(--c)}
+#timerNum{font-family:'Rajdhani',sans-serif;font-size:86px;font-weight:700;line-height:1;text-align:center}
+#timerNum.urgent{color:var(--red);animation:pulse .4s infinite}
+.timer-lbl{text-align:center;font-size:10px;letter-spacing:4px;color:var(--dim);text-transform:uppercase;margin-top:2px}
+.timer-bar{height:6px;background:rgba(255,255,255,.08);border-radius:6px;margin-top:12px;overflow:hidden}
+#timerBar{height:100%;width:0;background:var(--green);transition:width 1s linear,background .3s}
+.bid-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bid-btn{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:18px 10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;cursor:pointer;transition:all .15s}
+.bid-btn .sub{display:block;font-family:'Inter',sans-serif;font-size:10px;font-weight:400;color:var(--dim);margin-top:2px}
+.bid-btn:hover:not(:disabled){border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--panel2));transform:translateY(-2px)}
+.bid-btn:active:not(:disabled){transform:translateY(0)}
+.bid-btn:disabled{opacity:.25;cursor:not-allowed}
+.bid-hint{font-size:12px;color:var(--dim);text-align:center;margin-top:10px;min-height:16px}
+.mini-stats{display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--dim)}
+.mini-stats b{color:var(--text)}
+.scroll{max-height:230px;overflow-y:auto}
+.mini-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px}
+.mini-row:last-child{border-bottom:none}
+.mn{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mr{color:var(--dim);font-size:10px}
+.team-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px}
+.team-row:last-child{border-bottom:none}
+.tdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tn{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tn.me{color:var(--c);font-weight:700}
+.tc{color:var(--dim);font-size:10px;width:22px;text-align:right}
+.tbar{width:56px;height:3px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.tbar div{height:100%}
+.tp{width:66px;text-align:right;font-size:11px;color:var(--dim)}
+.result-ov{display:none;position:absolute;inset:0;z-index:5;align-items:center;justify-content:center;background:rgba(7,7,12,.9);backdrop-filter:blur(6px)}
+.result-ov.show{display:flex;animation:fade .3s}
+@keyframes fade{from{opacity:0}}
+.res-box{text-align:center;animation:pop .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(.5);opacity:0}}
+.res-icon{font-size:56px;display:block;margin-bottom:6px}
+.res-title{font-family:'Rajdhani',sans-serif;font-size:42px;font-weight:700;letter-spacing:4px}
+.res-sub{color:var(--dim);font-size:13px;margin-top:4px}
+.res-amt{font-family:'Rajdhani',sans-serif;font-size:26px;color:var(--money);margin-top:4px}
+#bidNotif{position:fixed;top:110px;right:14px;z-index:99;background:var(--panel);border:1px solid rgba(16,185,129,.45);color:var(--green);border-radius:12px;padding:10px 14px;font-size:12px;font-weight:600;opacity:0;transform:translateX(16px);transition:all .3s;pointer-events:none}
+#bidNotif.show{opacity:1;transform:none}
+</style>
+</head>
+<body style="--c:<%= team.color %>">
+<%- include('partials/nav', { active: 'auction', showStatus: true }) %>
+
+<main class="layout">
+  <div class="col">
+    <section class="panel player-card" id="playerCard" style="--pc:var(--accent)">
+      <div class="label">On the block</div>
+      <div class="player-main">
+        <div class="avatar" id="pAvatar">🏏</div>
+        <div style="flex:1;min-width:0">
+          <div class="pname-big" id="pName">Waiting for auction…</div>
+          <div class="tags" id="pTags"></div>
+        </div>
+      </div>
+      <div class="bid-grid">
+        <div class="stat-box"><div class="label">Current bid</div><div class="big-money" id="bidAmt">—</div></div>
+        <div class="stat-box"><div class="label">Leading</div><div class="lead none" id="bidTeam">No bids yet</div></div>
+      </div>
+      <div class="result-ov" id="resultOv">
+        <div class="res-box">
+          <span class="res-icon" id="rIcon">🔨</span>
+          <div class="res-title" id="rTitle">SOLD!</div>
+          <div class="res-sub" id="rSub"></div>
+          <div class="res-amt" id="rAmt"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="label">Timer</div>
+      <div id="timerNum">--</div>
+      <div class="timer-lbl">seconds remaining</div>
+      <div class="timer-bar"><div id="timerBar"></div></div>
+    </section>
+
+    <section class="panel">
+      <div class="label">Place bid — <%= team.name %></div>
+      <div class="bid-buttons" id="bidButtons"></div>
+      <div class="bid-hint" id="bidHint"></div>
+    </section>
+  </div>
+
+  <aside class="col">
+    <section class="panel" style="border-left:4px solid var(--c)">
+      <div class="label">My franchise</div>
+      <div class="big-money" id="myPurse">—</div>
+      <div class="mini-stats">
+        <span>Players <b id="myPlayers">0</b>/<%= config.maxPlayers %></span>
+        <span>Overseas <b id="myOverseas">0</b><% if (config.maxOverseas > 0) { %>/<%= config.maxOverseas %><% } %></span>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="label">My squad (<span id="squadCount">0</span>)</div>
+      <div id="squadList" class="scroll"><div class="empty">No players yet</div></div>
+    </section>
+    <section class="panel">
+      <div class="label">All franchises</div>
+      <div id="teamsList"></div>
+    </section>
+    <section class="panel">
+      <div class="label">Recent sales</div>
+      <div id="histList" class="scroll"><div class="empty">No sales yet</div></div>
+    </section>
+  </aside>
+</main>
+<div id="bidNotif"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+var socket = io()
+var MY_ID = <%- JSON.stringify(teamId) %>
+var running = false, myPurse = CFG.purse, curBid = 0, timerMax = CFG.timer
+var myCount = 0, myOS = 0, curPlayer = null, leader = null, hideT = null
+
+var bb = $("bidButtons")
+bb.innerHTML = CFG.bidSteps.map(function(s){
+  return '<button class="bid-btn" data-amt="' + s + '" disabled>+' + fmt(s).replace("₹", "") +
+         '<span class="sub">₹' + s.toLocaleString("en-IN") + '</span></button>'
+}).join("")
+bb.addEventListener("click", function(e){
+  var b = e.target.closest(".bid-btn")
+  if (b && !b.disabled) socket.emit("bid", { amount: +b.dataset.amt })
+})
+
+function initials(n){ return n.split(/\s+/).filter(Boolean).map(function(w){ return w[0] }).slice(0, 2).join("").toUpperCase() }
+
+function setStatus(s){
+  var el = $("statusEl"); if (!el) return
+  var map = { running: "LIVE ●", waiting: "WAITING", paused: "PAUSED", sold: "SOLD", unsold: "UNSOLD" }
+  el.textContent = map[s] || String(s).toUpperCase()
+  el.className = "status-pill s-" + s
+}
+
+function refreshButtons(){
+  var reason = ""
+  if (!running) reason = "Bidding opens when the auctioneer starts the timer"
+  else if (leader === MY_ID) reason = "You're the highest bidder 🏆"
+  else if (myCount >= CFG.maxPlayers) reason = "Squad full (" + CFG.maxPlayers + " players)"
+  else if (CFG.maxOverseas > 0 && curPlayer && curPlayer.nationality === "Overseas" && myOS >= CFG.maxOverseas) reason = "Overseas limit reached (" + CFG.maxOverseas + ")"
+  document.querySelectorAll(".bid-btn").forEach(function(b){
+    b.disabled = !!reason || myPurse < curBid + (+b.dataset.amt)
+  })
+  $("bidHint").textContent = reason
+}
+
+function hideResult(){ $("resultOv").classList.remove("show") }
+function showResult(r){
+  var mine = r.team === MY_ID, sold = r.status === "sold"
+  $("rIcon").textContent = sold ? (mine ? "🏆" : "🔨") : "✕"
+  $("rTitle").textContent = sold ? (mine ? "WON!" : "SOLD!") : "UNSOLD"
+  $("rSub").textContent = sold ? (mine ? "Added to your squad" : "to " + r.teamName) : r.player
+  $("rAmt").textContent = sold ? fmt(r.bid) : ""
+  $("resultOv").classList.add("show")
+  clearTimeout(hideT); hideT = setTimeout(hideResult, 4500)
+}
+
+socket.on("auctionUpdate", function(d){
+  setStatus(d.status)
+  running = d.status === "running"
+  leader = d.bidTeam
+  curBid = d.bid || 0
+  timerMax = d.timerMax || CFG.timer
+  curPlayer = d.player
+  if (["running", "waiting", "paused"].indexOf(d.status) !== -1) hideResult()
+  if (d.player){
+    var club = CLUBS[d.player.club]
+    $("playerCard").style.setProperty("--pc", club ? club.color : "var(--accent)")
+    $("pAvatar").textContent = initials(d.player.name)
+    $("pName").textContent = d.player.name
+    $("pTags").innerHTML = clubBadge(d.player.club, true) + roleTag(d.player.role) + natTag(d.player) +
+      '<span class="tag tag-money">Base ' + fmt(d.player.base) + '</span>'
+  }
+  $("bidAmt").textContent = d.bid ? fmt(d.bid) : "—"
+  var te = $("bidTeam")
+  if (d.bidTeam){
+    var t = TEAMS[d.bidTeam] || {}
+    te.textContent = d.bidTeam === MY_ID ? "YOU 🏆" : (t.name || d.bidTeamName)
+    te.className = "lead" + (d.bidTeam === MY_ID ? " mine" : "")
+    te.style.color = d.bidTeam === MY_ID ? "" : (t.color || "")
+  } else { te.textContent = "No bids yet"; te.className = "lead none"; te.style.color = "" }
+  refreshButtons()
+})
+
+socket.on("timerUpdate", function(t){
+  var el = $("timerNum")
+  el.textContent = t > 0 ? t : "--"
+  el.className = (t > 0 && t <= 3) ? "urgent" : ""
+  var pct = timerMax > 0 ? Math.max(0, Math.min(100, t / timerMax * 100)) : 0
+  var bar = $("timerBar")
+  bar.style.width = (t > 0 ? pct : 0) + "%"
+  bar.style.background = t <= 3 ? "var(--red)" : t <= 6 ? "#f59e0b" : "var(--green)"
+})
+
+socket.on("auctionResult", function(r){ running = false; setStatus(r.status); refreshButtons(); showResult(r) })
+
+socket.on("teamUpdate", function(state){
+  var me = state[MY_ID]
+  if (me){
+    myPurse = me.purse; myCount = me.players.length; myOS = me.overseas
+    $("myPurse").textContent = fmt(me.purse)
+    $("myPlayers").textContent = myCount
+    $("myOverseas").textContent = myOS
+    $("squadCount").textContent = myCount
+    $("squadList").innerHTML = myCount ? me.players.map(function(p){
+      return '<div class="mini-row"><span class="mn">' + esc(p.name) + '</span>' + clubBadge(p.club) + '<span class="mr">' + esc(p.role) + '</span></div>'
+    }).join("") : '<div class="empty">No players yet</div>'
+  }
+  var html = ""
+  Object.keys(state).forEach(function(id){
+    var s = state[id], t = TEAMS[id] || {}, pct = Math.max(0, Math.round(s.purse / CFG.purse * 100))
+    html += '<div class="team-row"><span class="tdot" style="background:' + t.color + '"></span>' +
+      '<span class="tn' + (id === MY_ID ? " me" : "") + '">' + esc(t.name || id) + (id === MY_ID ? " ★" : "") + '</span>' +
+      '<span class="tc">' + s.players.length + '</span>' +
+      '<div class="tbar"><div style="width:' + pct + '%;background:' + t.color + '"></div></div>' +
+      '<span class="tp">' + fmt(s.purse) + '</span></div>'
+  })
+  $("teamsList").innerHTML = html
+  refreshButtons()
+})
+
+socket.on("historyUpdate", function(h){
+  if (!h.length) { $("histList").innerHTML = '<div class="empty">No sales yet</div>'; return }
+  $("histList").innerHTML = h.map(function(x){
+    var t = TEAMS[x.team] || {}
+    return '<div class="mini-row"><span class="tdot" style="background:' + (t.color || "#666") + '"></span>' +
+      '<span class="mn">' + esc(x.player) + ' <span class="mr">→ ' + esc(t.short || x.teamName) + '</span></span>' +
+      '<span class="money">' + esc(x.amountStr) + '</span></div>'
+  }).join("")
+})
+
+socket.on("newBid", function(d){
+  var n = $("bidNotif")
+  n.textContent = "🔔 " + d.teamName + " — " + d.amountStr
+  n.classList.add("show")
+  clearTimeout(n._h); n._h = setTimeout(function(){ n.classList.remove("show") }, 2500)
+})
+socket.on("bidError", function(m){ showToast(m, "err") })
+socket.on("systemMessage", function(m){ showToast(m, "info") })
+</script>
+</body>
+</html>

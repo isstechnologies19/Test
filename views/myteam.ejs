@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>My Squad — <%= team.name %></title>
+<%- include('partials/head') %>
+<style>
+.squad-title{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.squad-title .dot{width:14px;height:14px;border-radius:50%;background:var(--c)}
+.squad-title h1{font-family:'Rajdhani',sans-serif;font-size:28px;letter-spacing:2px}
+</style>
+</head>
+<body style="--c:<%= team.color %>">
+<%- include('partials/nav', { active: 'squad' }) %>
+<main class="page">
+  <div class="squad-title"><span class="dot"></span><h1><%= team.name %></h1></div>
+  <div class="stats">
+    <div class="stat" style="border-color:var(--c)"><div class="v" id="statPts" style="color:var(--money)">—</div><div class="l">Fantasy points</div></div>
+    <div class="stat"><div class="v" id="statPlayers" style="color:var(--c)">0</div><div class="l">Players / <%= config.maxPlayers %></div></div>
+    <div class="stat"><div class="v" id="statOS" style="color:var(--orange)">0</div><div class="l">Overseas<% if (config.maxOverseas > 0) { %> / <%= config.maxOverseas %><% } %></div></div>
+    <div class="stat"><div class="v" id="statPurse" style="font-size:22px;color:var(--money)">—</div><div class="l">Purse left</div></div>
+  </div>
+  <div class="tbl" id="squadTbl"><div class="empty">Loading…</div></div>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+var MY_ID = <%- JSON.stringify(teamId) %>
+var mine = <%- JSON.stringify(myState) %>
+var points = {}
+
+function render(){
+  var ps = mine.players || []
+  $("statPlayers").textContent = ps.length
+  $("statOS").textContent = mine.overseas || 0
+  $("statPurse").textContent = fmt(mine.purse)
+  $("statPts").textContent = Object.keys(points).length ? sumPoints(ps, points).toFixed(1) : "—"
+  $("squadTbl").innerHTML = renderSquadTable(ps, points)
+}
+function loadPoints(){ fetchPoints().then(function(p){ points = p; render() }) }
+
+render()
+loadPoints()
+setInterval(loadPoints, 300000)
+io().on("teamUpdate", function(s){ if (s[MY_ID]) { mine = s[MY_ID]; render() } })
+</script>
+</body>
+</html>

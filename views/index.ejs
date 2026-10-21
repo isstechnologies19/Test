@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title><%= config.title %> — Friends Auction</title>
+<%- include('partials/head') %>
+<style>
+.hero{text-align:center;padding:60px 16px 30px;max-width:1400px;margin:0 auto}
+.hero-kicker{font-size:11px;letter-spacing:6px;color:var(--accent2);text-transform:uppercase;margin-bottom:14px}
+.hero h1{font-family:'Rajdhani',sans-serif;font-size:clamp(56px,10vw,120px);font-weight:700;letter-spacing:6px;line-height:.95}
+.hero p{color:var(--dim);margin-top:14px;font-size:14px;letter-spacing:1px}
+.club-strip{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:28px}
+.club-pill{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:30px;background:var(--panel);border:1px solid color-mix(in srgb,var(--cc) 40%,transparent);font-size:12px;font-weight:600}
+.club-pill i{width:9px;height:9px;border-radius:50%;background:var(--cc)}
+.home{display:grid;grid-template-columns:1fr 400px;gap:24px;max-width:1400px;margin:0 auto;padding:10px 20px 60px}
+@media(max-width:960px){.home{grid-template-columns:1fr;padding:10px 14px 40px}}
+.section-label{font-size:11px;letter-spacing:5px;color:var(--dim);text-transform:uppercase;margin-bottom:14px}
+.teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.team-card{position:relative;display:block;text-decoration:none;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:26px 16px 22px;text-align:center;overflow:hidden;transition:all .2s}
+.team-card::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--tc);transform:scaleX(0);transition:transform .3s}
+.team-card:hover{transform:translateY(-4px);border-color:var(--tc);background:var(--panel2)}
+.team-card:hover::before{transform:scaleX(1)}
+.badge{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--tc);border:2px solid var(--tc);transition:all .2s}
+.team-card:hover .badge{background:var(--tc);color:#fff}
+.team-name{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px}
+.team-meta{font-size:11px;color:var(--dim);margin-top:6px}
+.links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.lb-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;letter-spacing:3px;text-align:center;padding-bottom:14px;margin-bottom:6px;border-bottom:1px solid var(--border)}
+.lb-row{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid rgba(255,255,255,.05)}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{width:26px;font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700}
+.lb-dot{width:10px;height:10px;border-radius:50%}
+.lb-name{flex:1;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-pts{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--money)}
+</style>
+</head>
+<body>
+<section class="hero">
+  <div class="hero-kicker">Season 12 • 2026-27</div>
+  <h1 class="grad-text"><%= config.title %></h1>
+  <p><%= config.subtitle %> &nbsp;•&nbsp; <%= Object.keys(teams).length %> franchises &nbsp;•&nbsp; <%= poolSize %> players</p>
+  <div class="club-strip">
+    <% Object.keys(clubs).forEach(function(code){ %>
+      <div class="club-pill" style="--cc:<%= clubs[code].color %>"><i></i><%= clubs[code].name %></div>
+    <% }) %>
+  </div>
+</section>
+
+<div class="home">
+  <div>
+    <div class="section-label">— Pick your franchise —</div>
+    <div class="teams-grid">
+      <% Object.keys(teams).forEach(function(id){ %>
+      <a class="team-card" href="/team/<%= id %>" style="--tc:<%= teams[id].color %>">
+        <div class="badge"><%= teams[id].short %></div>
+        <div class="team-name"><%= teams[id].name %></div>
+        <div class="team-meta" id="meta-<%= id %>">—</div>
+      </a>
+      <% }) %>
+    </div>
+    <div class="links">
+      <a class="btn-ghost" href="/leaderboard">🏆 Full Leaderboard</a>
+      <a class="btn-ghost" href="/admin">⚙ Auctioneer Panel</a>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <div class="lb-title">🏆 Live Standings</div>
+    <div id="standings"><div class="empty">Loading…</div></div>
+    <div class="dim small" id="standNote" style="text-align:center;margin-top:10px"></div>
+  </aside>
+</div>
+
+<script>
+fetch("/api/leaderboard").then(function(r){ return r.json() }).then(function(d){
+  var html = ""
+  ;(d.teams || []).forEach(function(t, i){
+    var meta = $("meta-" + t.id)
+    if (meta) meta.textContent = (d.hasPoints ? t.points.toFixed(1) + " pts · " : "") + t.playerCount + " players · " + fmt(t.purse) + " left"
+    var col = i === 0 ? "#fbbf24" : i === 1 ? "#d4d4d8" : i === 2 ? "#d97706" : "var(--dim)"
+    html += '<div class="lb-row"><div class="lb-rank" style="color:' + col + '">' + (i + 1) + '</div>' +
+      '<div class="lb-dot" style="background:' + t.color + '"></div>' +
+      '<div class="lb-name">' + esc(t.name) + '</div>' +
+      '<div class="lb-pts">' + (d.hasPoints ? t.points.toFixed(1) : t.playerCount + " pl") + '</div></div>'
+  })
+  $("standings").innerHTML = html || '<div class="empty">No teams</div>'
+  if (!d.hasPoints) $("standNote").textContent = "Fantasy points appear once WBBL|12 matches begin."
+}).catch(function(){
+  $("standings").innerHTML = '<div class="empty" style="color:var(--red)">Could not load standings</div>'
+})
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "wbbl-auction-2026",
+  "version": "3.0.0",
+  "description": "WBBL 2026-27 Friends Auction - live bidding for 10 franchises",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "mongodb": "^6.10.0",
+    "socket.io": "^4.8.1"
+  }
+}

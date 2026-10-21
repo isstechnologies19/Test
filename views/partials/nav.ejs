@@ -1,0 +1,26 @@
+<header class="topbar">
+  <div class="topbar-main">
+    <div class="brand">
+      <a href="/" class="logo"><span class="logo-mark">W</span><span><%= config.title %></span></a>
+      <% if (locals.team) { %><span class="team-chip" style="background:<%= team.color %>"><%= team.short %></span><% } %>
+      <% if (locals.showStatus) { %><span id="statusEl" class="status-pill s-waiting">WAITING</span><% } %>
+    </div>
+    <div class="brand">
+      <% if (locals.team) { %>
+        <span class="hide-m small dim"><%= team.name %></span>
+        <a class="btn-ghost" href="/logout">Exit</a>
+      <% } else { %>
+        <a class="btn-ghost" href="/">Home</a>
+      <% } %>
+    </div>
+  </div>
+  <% if (locals.team) { %>
+  <nav class="tabs">
+    <a class="tab <%= locals.active === 'auction' ? 'active' : '' %>" href="/dashboard">⚡ Auction</a>
+    <a class="tab <%= locals.active === 'squad' ? 'active' : '' %>" href="/myteam">👥 My Squad</a>
+    <a class="tab <%= locals.active === 'all' ? 'active' : '' %>" href="/allteams">🏟 All Teams</a>
+    <a class="tab <%= locals.active === 'trade' ? 'active' : '' %>" href="/trade">🔄 Trade</a>
+    <a class="tab <%= locals.active === 'ranks' ? 'active' : '' %>" href="/leaderboard">🏆 Ranks</a>
+  </nav>
+  <% } %>
+</header>

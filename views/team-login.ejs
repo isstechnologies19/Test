@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title><%= team.name %> — Login</title>
+<%- include('partials/head') %>
+<style>
+body{display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--tc);border-radius:14px;padding:40px 32px;text-align:center}
+.badge{width:76px;height:76px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;background:var(--tc);font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:#fff}
+h2{font-family:'Rajdhani',sans-serif;font-size:28px;letter-spacing:2px;color:var(--tc);margin-bottom:4px}
+.sub{color:var(--dim);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:26px}
+.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:10px;padding:10px;font-size:13px;margin-bottom:14px}
+.input{padding:14px;font-size:15px;margin-bottom:14px}
+.input:focus{border-color:var(--tc)}
+.go{width:100%;padding:14px;font-size:17px;letter-spacing:3px;background:var(--tc);border:none}
+.back{display:block;margin-top:18px;color:var(--dim);font-size:12px;text-decoration:none}
+.back:hover{color:var(--text)}
+</style>
+</head>
+<body style="--tc:<%= team.color %>">
+<div class="card">
+  <div class="badge"><%= team.short %></div>
+  <h2><%= team.name %></h2>
+  <div class="sub"><%= config.title %> Auction</div>
+  <% if (error) { %><div class="error">⚠ <%= error %></div><% } %>
+  <form method="POST" action="/team/<%= id %>">
+    <input class="input" type="password" name="password" placeholder="Team password" required autofocus autocomplete="current-password">
+    <button class="btn go" type="submit">ENTER AUCTION →</button>
+  </form>
+  <a class="back" href="/">← Back to franchises</a>
+</div>
+</body>
+</html>

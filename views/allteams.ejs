@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>All Teams — <%= config.title %></title>
+<%- include('partials/head') %>
+<style>
+.team-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.ttab{padding:6px 13px;border-radius:20px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;border:1px solid var(--border);color:var(--dim);background:transparent;transition:all .2s}
+.ttab:hover{color:var(--text)}
+.ttab.active{color:#fff;border-color:var(--tc);background:color-mix(in srgb,var(--tc) 22%,transparent)}
+.tinfo{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);border-left:4px solid var(--tc)}
+.tname{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700}
+.tstat{text-align:center}
+.tstat .v{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--money)}
+.tstat .l{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+</style>
+</head>
+<body style="--c:<%= team.color %>">
+<%- include('partials/nav', { active: 'all' }) %>
+<main class="page">
+  <div class="h-title">🏟 All Franchises</div>
+  <div class="team-tabs" id="teamTabs"></div>
+  <div class="tbl" id="teamTable"><div class="empty">Loading…</div></div>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+var MY_ID = <%- JSON.stringify(teamId) %>
+var STATE = <%- JSON.stringify(allTeamState) %>
+var points = {}, current = MY_ID
+
+$("teamTabs").addEventListener("click", function(e){
+  var b = e.target.closest(".ttab")
+  if (b) { current = b.dataset.id; render() }
+})
+
+function render(){
+  $("teamTabs").innerHTML = Object.keys(TEAMS).map(function(id){
+    var t = TEAMS[id]
+    return '<button class="ttab' + (id === current ? " active" : "") + '" style="--tc:' + t.color + '" data-id="' + id + '">' + esc(t.name) + (id === MY_ID ? " ★" : "") + '</button>'
+  }).join("")
+  var t = TEAMS[current], s = STATE[current] || { players: [], purse: CFG.purse, overseas: 0 }
+  var hasPts = Object.keys(points).length > 0
+  var html = '<div class="tinfo" style="--tc:' + t.color + '">' +
+    '<div><div class="tname" style="color:' + t.color + '">' + esc(t.name) + '</div>' +
+    '<div class="dim small">' + s.players.length + ' players · ' + (s.overseas || 0) + ' overseas · ' + fmt(s.purse) + ' left</div></div>' +
+    '<div class="tstat"><div class="v">' + (hasPts ? sumPoints(s.players, points).toFixed(1) : "—") + '</div><div class="l">Points</div></div></div>'
+  html += renderSquadTable(s.players, points)
+  $("teamTable").innerHTML = html
+}
+
+render()
+fetchPoints().then(function(p){ points = p; render() })
+setInterval(function(){ fetchPoints().then(function(p){ points = p; render() }) }, 300000)
+io().on("teamUpdate", function(s){ STATE = s; render() })
+</script>
+</body>
+</html>
