@@ -411,12 +411,6 @@ app.post("/team/:id", function (req, res) {
   })
 })
 
-  req.session.regenerate(function () {
-    req.session.teamId = id
-    req.session.isAdmin = false
-    req.session.save(function () { res.redirect("/dashboard") })
-  })
-})
 
 app.get("/dashboard", requireTeam, function (req, res) {
   res.render("dashboard", { team: publicTeams[req.teamId], teamId: req.teamId })
