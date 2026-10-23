@@ -401,10 +401,13 @@ app.get("/team/:id", function (req, res) {
 app.post("/team/:id", function (req, res) {
   const id = req.params.id
   if (!teams[id]) return res.redirect("/")
+
   req.session.regenerate(function () {
     req.session.teamId = id
     req.session.isAdmin = false
-    req.session.save(function () { res.redirect("/dashboard") })
+    req.session.save(function () {
+      res.redirect("/dashboard")
+    })
   })
 })
 
