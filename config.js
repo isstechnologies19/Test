@@ -17,7 +17,8 @@ module.exports = {
 
   // ── Auction rules (109 players ÷ 10 teams ≈ 11 each, 24 overseas in pool) ──
   TEAM_PURSE: 100 * CR,
-  MAX_PLAYERS: 11,
+  MIN_PLAYERS: 10,
+  MAX_PLAYERS: 15,
   MAX_OVERSEAS: 0,
   DEFAULT_BASE_PRICE: 20 * L,               // per-player override in data/players.js
   BID_STEPS: [10 * L, 20 * L, 50 * L, 1 * CR],
