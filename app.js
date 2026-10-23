@@ -397,12 +397,17 @@ app.get("/team/:id", function (req, res) {
   res.render("team-login", { team: publicTeams[id], id: id, error: null })
 })
 
+
 app.post("/team/:id", function (req, res) {
   const id = req.params.id
   if (!teams[id]) return res.redirect("/")
-  if ((req.body.password || "") !== teams[id].password) {
-    return res.render("team-login", { team: publicTeams[id], id: id, error: "Wrong password!" })
-  }
+  req.session.regenerate(function () {
+    req.session.teamId = id
+    req.session.isAdmin = false
+    req.session.save(function () { res.redirect("/dashboard") })
+  })
+})
+
   req.session.regenerate(function () {
     req.session.teamId = id
     req.session.isAdmin = false
