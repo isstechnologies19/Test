@@ -40,7 +40,7 @@ module.exports = {
   SCRIPT_TOKEN: process.env.SCRIPT_TOKEN || "wbbl-secret-123",
   // ── Your friends' franchises ──
   teams: {
-    team1:  { name: "Blackcaps",         short: "T1",  color: "#3B82F6", password: pass("team1",  "team1") },
+    team1:  { name: "Blackcaps",         short: "T1",  color: "#3B82F6" },
     team2:  { name: "Knight Riders",     short: "T2",  color: "#EF4444", password: pass("team2",  "team2") },
     team3:  { name: "11 Mates",          short: "T3",  color: "#F59E0B", password: pass("team3",  "team3") },
     team4:  { name: "Relangi Mavayya",   short: "T4",  color: "#10B981", password: pass("team4",  "team4") },
