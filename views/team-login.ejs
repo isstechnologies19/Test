@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,8 +11,6 @@ body{display:flex;align-items:center;justify-content:center;padding:20px}
 h2{font-family:'Rajdhani',sans-serif;font-size:28px;letter-spacing:2px;color:var(--tc);margin-bottom:4px}
 .sub{color:var(--dim);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:26px}
 .error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;border-radius:10px;padding:10px;font-size:13px;margin-bottom:14px}
-.input{padding:14px;font-size:15px;margin-bottom:14px}
-.input:focus{border-color:var(--tc)}
 .go{width:100%;padding:14px;font-size:17px;letter-spacing:3px;background:var(--tc);border:none}
 .back{display:block;margin-top:18px;color:var(--dim);font-size:12px;text-decoration:none}
 .back:hover{color:var(--text)}
@@ -24,7 +23,6 @@ h2{font-family:'Rajdhani',sans-serif;font-size:28px;letter-spacing:2px;color:var
   <div class="sub"><%= config.title %> Auction</div>
   <% if (error) { %><div class="error">⚠ <%= error %></div><% } %>
   <form method="POST" action="/team/<%= id %>">
-    <input class="input" type="password" name="password" placeholder="Team password" required autofocus autocomplete="current-password">
     <button class="btn go" type="submit">ENTER AUCTION →</button>
   </form>
   <a class="back" href="/">← Back to franchises</a>
