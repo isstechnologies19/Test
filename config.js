@@ -44,7 +44,9 @@ module.exports = {
     team2:  { name: "Knight Riders",     short: "T2",  color: "#EF4444", password: pass("team2",  "team2") },
     team3:  { name: "11 Mates",          short: "T3",  color: "#F59E0B", password: pass("team3",  "team3") },
     team4:  { name: "Relangi Mavayya",   short: "T4",  color: "#10B981", password: pass("team4",  "team4") },
-    team5:  { name: "11 Beasts",         short: "T5",  color: "#8B5CF6", password: pass("team5",  "team5") }
+    team5:  { name: "11 Beasts",         short: "T5",  color: "#8B5CF6", password: pass("team5",  "team5") },
+    team6:  { name: "Vattakay Warriors", short: "T6",  color: "#10B981", password: pass("team6",  "team6") },
+    team7:  { name: "Sai Ba",            short: "T7",  color: "#8B5CF6", password: pass("team7",  "team7") }
   },
 
   // ── The 8 real WBBL clubs (shown as badges on players) ──
